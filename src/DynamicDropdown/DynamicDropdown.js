@@ -1,81 +1,99 @@
 import React, { useState } from 'react'
-import { items, responseArray, subCategories } from '../MockupData/MockupData';
+import { responseArray } from '../MockupData/MockupData';
 
 
 const DynamicDropdown = () => {
-    const [selections, setSelections] = useState({ category: '', subCategory: '', item: '' });
-    const [tableData, setTableData] = useState([]);
-  
-    // Handle selection change for each dropdown
-    const handleSelectionChange = (key, value) => {
-      setSelections((prev) => ({
-        ...prev,
-        [key]: value,
-        // Clear dependent dropdowns when parent changes
-        ...(key === "category" ? { subCategory: '', item: '' } : {}),
-        ...(key === "subCategory" ? { item: '' } : {}),
-      }));
-    };
-  
-    // Get options based on current selection
-    const getOptions = (key) => {
-      if (key === "category") return responseArray[0].value;
-      if (key === "subCategory") return subCategories[selections.category] || [];
-      if (key === "item") return items[selections.subCategory] || [];
-      return [];
-    };
-  
-    // Add current selections to the table
-    const addRowToTable = () => {
-      setTableData([...tableData, selections]);
-      setSelections({ category: '', subCategory: '', item: '' }); // Reset selections after adding
-    };
-  
-    return (
-      <div>
-        <div style={{ marginBottom: '20px' }}>
-          {responseArray.map((dropdown, index) => (
-            <div key={dropdown.key} style={{ marginBottom: '10px' }}>
-              <label>{dropdown.name}: </label>
-              <select
-                value={selections[dropdown.key] || ''}
-                onChange={(e) => handleSelectionChange(dropdown.key, e.target.value)}
-                disabled={index > 0 && !selections[responseArray[index - 1].key]}
-              >
-                <option value="" disabled>Select {dropdown.name}</option>
-                {getOptions(dropdown.key).map((option) => (
-                  <option key={option} value={option}>{option}</option>
-                ))}
-              </select>
-            </div>
-          ))}
+  const [selectedOptions, setSelectedOptions] = useState({});
+  const [tableData, setTableData] = useState([]);
+
+  // Placeholder data for dynamic dependencies
+  const dependencyData = {
+    country: {
+      USA: ['California', 'Texas'],
+      Canada: ['Ontario', 'Quebec']
+    },
+    state: {
+      California: ['Los Angeles', 'San Francisco'],
+      Texas: ['Austin', 'Houston'],
+      Ontario: ['Toronto', 'Ottawa'],
+      Quebec: ['Montreal', 'Quebec City']
+    }
+  };
+
+  // Handle dropdown selection changes
+  const handleSelectChange = (key, value) => {
+    setSelectedOptions((prevOptions) => {
+      const newOptions = { ...prevOptions, [key]: value };
+
+      // Reset dependent dropdowns if the parent dropdown changes
+      const currentIndex = responseArray.findIndex(item => item.key === key);
+      for (let i = currentIndex + 1; i < responseArray.length; i++) {
+        newOptions[responseArray[i].key] = '';
+      }
+      return newOptions;
+    });
+  };
+
+  // Add current selections to the table
+  const addToTable = () => {
+    setTableData((prevData) => [...prevData, selectedOptions]);
+    setSelectedOptions({});
+  };
+
+  // Helper function to get dropdown options based on dependencies
+  const getOptions = (item, index) => {
+    if (index === 0) {
+      return item.value; // Use value from the first object
+    }
+    const parentKey = responseArray[index - 1].key;
+    const parentValue = selectedOptions[parentKey];
+    return dependencyData[parentKey]?.[parentValue] || [];
+  };
+
+  return (
+    <div>
+      {/* Render dropdowns dynamically */}
+      {responseArray.map((item, index) => (
+        <div key={item.key}>
+          <label>{item.name}:</label>
+          <select
+            value={selectedOptions[item.key] || ''}
+            onChange={(e) => handleSelectChange(item.key, e.target.value)}
+            disabled={index > 0 && !selectedOptions[responseArray[index - 1].key]}
+          >
+            <option value="">Select {item.name}</option>
+            {getOptions(item, index).map((option) => (
+              <option key={option} value={option}>{option}</option>
+            ))}
+          </select>
         </div>
-        <button onClick={addRowToTable} disabled={!selections.category || !selections.subCategory || !selections.item}>
-          Add to Table
-        </button>
-  
-        {tableData.length > 0 && (
-          <table border="1" cellPadding="10" style={{ marginTop: '20px', borderCollapse: 'collapse' }}>
-            <thead>
-              <tr>
-                {responseArray.map((header) => (
-                  <th key={header.key}>{header.name}</th>
-                ))}
-              </tr>
-            </thead>
-            <tbody>
-              {tableData.map((row, index) => (
-                <tr key={index}>
-                  {responseArray.map((header) => (
-                    <td key={header.key}>{row[header.key]}</td>
-                  ))}
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        )}
-      </div>
-    );
+      ))}
+
+      <button onClick={addToTable} disabled={!Object.keys(selectedOptions).length}>Add to Table</button>
+
+      {/* Render table with selected options */}
+   {tableData.length > 0 && (
+       <table border="1">
+       <thead>
+         <tr>
+           {responseArray.map(item => (
+             <th key={item.key}>{item.name}</th>
+           ))}
+         </tr>
+       </thead>
+       <tbody>
+         {tableData.map((rowData, rowIndex) => (
+           <tr key={rowIndex}>
+             {responseArray.map(item => (
+               <td key={item.key}>{rowData[item.key]}</td>
+             ))}
+           </tr>
+         ))}
+       </tbody>
+     </table>
+   )}
+    </div>
+  );
   };
 
 export default DynamicDropdown

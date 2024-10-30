@@ -1,0 +1,26 @@
+To create dynamic drop down and update selected values inside table. { Data will fetch from the API } 
+
++++++++++++++ Documents ++++++++++++++++
+
+let's set up the component to follow the scenario you described:
+
+-> Only the first object in responseArray has a value key, which is an array of values.
+-> Each dropdown's value depends on the previous dropdown's selection.
+-> Add selections to a table where table headers correspond to the dropdowns’ name properties.
+
+Explanation
+State Management:
+
+selectedOptions holds the current selection for each dropdown.
+tableData stores all added rows for the table.
+Dropdown Rendering:
+
+For the first dropdown (index 0), options are taken directly from responseArray[0].value.
+For the rest of the dropdowns, options are derived based on dependencyData and the previous dropdown’s selection.
+Add to Table:
+
+Clicking the "Add to Table" button adds the current selections to tableData and clears selectedOptions.
+Dynamic Dependencies:
+
+The getOptions function fetches dependent options based on selectedOptions and dependencyData, where each child dropdown relies on the selected value of its parent dropdown.
+This component allows you to easily modify responseArray and dependencyData to accommodate different data structures while maintaining dropdown dependencies. The table dynamically updates with the names and values based on selections from these dropdowns.
