@@ -4,7 +4,9 @@ import { responseArray } from '../MockupData/MockupData';
 
 const DynamicDropdown = ({ fetchOptions }) => {
   const [dropdownValues, setDropdownValues] = useState([]);
-  const [selectedOptions, setSelectedOptions] = useState({});
+  const [selectedOptions, setSelectedOptions] = useState({
+    key: ''
+  });
   const [tableRows, setTableRows] = useState([]);
 
   // Initialize dropdown options
@@ -21,21 +23,30 @@ const DynamicDropdown = ({ fetchOptions }) => {
 
   // Function to handle dropdown selection changes
   const handleSelectChange = async (selectedValue, index) => {
+    // console.log('selectedValue', selectedValue);
+    // console.log('Index--', index);
     const currentDropdown = responseArray[index];
-    setSelectedOptions((prev) => ({
+    // console.log('currentDropDown', currentDropdown);
+    setSelectedOptions((prev) => ({   // creating a array of selected options with key value pairs and later pass them to create Table.
       ...prev,
       [currentDropdown.key]: selectedValue,
+      key: selectedValue
     }));
 
     // Load options for the next dropdown based on the selected value of the current one
     if (index + 1 < responseArray.length) {
-      const nextDropdown = responseArray[index + 1];
-      const newOptions = await fetchOptions(selectedValue, nextDropdown.key);
-      console.log('newOptions', newOptions);
+      const nextDropdown = responseArray[index + 1]; // taking next child dropdown from responseArray
+      // console.log('nextDropDown', nextDropdown);
+      const newOptions = await fetchOptions(selectedValue, nextDropdown.key);   // To fetch dropdrowns-options for child dropdown
+      // console.log('newOptionsByFetching', newOptions);
       setDropdownValues((prevValues) => {
+        // console.log('prevValuesDropdowns', prevValues);
         const updatedValues = [...prevValues];
-        updatedValues[index + 1] = { key: nextDropdown.key, options: newOptions };
-        return updatedValues.slice(0, index + 2); // Keep only options up to the current level
+        // console.log('updateValues',updatedValues);
+        updatedValues[index+1] = { key: nextDropdown.key, options: newOptions }; // Setting child dropdownvalue
+        // console.log('updateValues===',updatedValues[index+1]);
+        let latestDropdownValue = updatedValues.slice(0, index + 2);
+        return latestDropdownValue; // Keep only options up to the current level
       });
     }
   };
@@ -43,16 +54,16 @@ const DynamicDropdown = ({ fetchOptions }) => {
   // Function to add selected options as a new row in the table
   const handleAddRow = () => {
     const newRow = responseArray.map((item) => selectedOptions[item.key] || '');
-    console.log('newRow', newRow);
-    console.log('tableRows', tableRows);
-    let duplicate = tableRows.some((item) => item[item.length-1] === newRow[newRow.length-1]);
+    // console.log('newRow==', newRow);
+    let duplicate = tableRows.some((item) => item[item.length - 1] === newRow[newRow.length - 1]);
     if (duplicate) {
-      console.log('duplicate');
+      // console.log('duplicate');
     } else {
       setTableRows([...tableRows, newRow]);
     }
   };
-
+console.log('dropdown,',dropdownValues);
+  console.log('selectedOptions',selectedOptions);
   return (
     <div>
       {/* Dynamic Dropdowns */}
@@ -62,11 +73,11 @@ const DynamicDropdown = ({ fetchOptions }) => {
             <label>{dropdown.name}:</label>
             <select
               onChange={(e) => handleSelectChange(e.target.value, index)}
-              value={selectedOptions[dropdown.key] || ''}
+              value={selectedOptions[dropdown.key] || ''}  // yha pr expression pass kra h to get object value
               disabled={index > 0 && !selectedOptions[responseArray[index - 1].key]} // Disable if no value is selected in the parent dropdown
             >
               <option value="">Select {dropdown.name}</option>
-              {dropdownValues[index]?.options?.map((option, idx) => (
+              {dropdownValues[index]?.options.map((option, idx) => (
                 <option key={idx} value={option}>
                   {option}
                 </option>
