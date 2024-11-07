@@ -3,10 +3,9 @@ import { responseArray } from '../MockupData/MockupData';
 
 
 const DynamicDropdown = ({ fetchOptions }) => {
+  const initialSelections = responseArray.reduce((acc, item) => ({ ...acc, [item.key]: '', key: '' }), {});
   const [dropdownValues, setDropdownValues] = useState([]);
-  const [selectedOptions, setSelectedOptions] = useState({
-    key: ''
-  });
+  const [selectedOptions, setSelectedOptions] = useState(initialSelections);
   const [tableRows, setTableRows] = useState([]);
 
   // Initialize dropdown options
@@ -60,6 +59,7 @@ const DynamicDropdown = ({ fetchOptions }) => {
       // console.log('duplicate');
     } else {
       setTableRows([...tableRows, newRow]);
+      setSelectedOptions(initialSelections)
     }
   };
 console.log('dropdown,',dropdownValues);
